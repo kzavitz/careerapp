@@ -6,14 +6,26 @@ from nltk.stem import WordNetLemmatizer, PorterStemmer
 from nltk.corpus import stopwords
 from sklearn.feature_extraction.text import TfidfVectorizer
 import nltk
+from datetime import datetime
 
+# Google Sheets Logging
+import gspread
+from oauth2client.service_account import ServiceAccountCredentials
+
+# Set up Sheets auth
+scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
+creds = ServiceAccountCredentials.from_json_keyfile_name("service_account.json", scope)
+gc = gspread.authorize(creds)
+sheet = gc.open("ChatLogs").sheet1  # Ensure your sheet exists and is shared with service account
+
+# NLTK setup
 nltk.download('wordnet')
 nltk.download('omw-1.4')
 nltk.download('stopwords')
 
 lemmatizer = WordNetLemmatizer()
 stemmer = PorterStemmer()
-stop_words = set(stopwords.words("english")) | {"hi", "hello", "there", "like", "mostly", "make", "good", "want",
+stop_words = set(stopwords.words("english")) | {"hi", "interest", "pursue", "passion", "hello", "there", "like", "mostly", "make", "good", "want",
                                                 "play", "playing", "grade", "family", "enjoy", "going", "music", "would", "student", "work"}
 
 app = Flask(__name__, template_folder="templates")
@@ -71,7 +83,6 @@ def chat():
             noc_code = str(row.get("NOC", "11111")).strip()
             noc_link = f"https://noc.esdc.gc.ca/Structure/NOCProfile?code={noc_code}&version=2021.0" if noc_code else "nocod"
 
-            # Build related careers in the same category
             same_category_jobs = careers_df[careers_df["Category"] == row["Category"]][["Job Title", "Links"]].to_dict(orient="records")
 
             matched_careers.append({
@@ -86,6 +97,14 @@ def chat():
             })
 
     matched_careers = sorted(matched_careers, key=lambda x: len(x["Matched Keywords"]), reverse=True)[:3]
+
+    # Log to Google Sheet
+    timestamp = datetime.utcnow().isoformat()
+    matched_titles = ", ".join([job["Job Title"] for job in matched_careers]) if matched_careers else "No matches"
+    try:
+        sheet.append_row([timestamp, user_input, matched_titles])
+    except Exception as e:
+        print(f"Error logging to Google Sheets: {e}")
 
     if not matched_careers:
         return jsonify({
