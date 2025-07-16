@@ -8,6 +8,10 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 import nltk
 from datetime import datetime
 
+# Flask-Limiter for rate limiting
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+
 # Google Sheets Logging
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
@@ -25,11 +29,20 @@ nltk.download('stopwords')
 
 lemmatizer = WordNetLemmatizer()
 stemmer = PorterStemmer()
-stop_words = set(stopwords.words("english")) | {"hi", "interest", "pursue", "passion", "hello", "there", "like", "mostly", "make", "good", "want",
-                                                "play", "playing", "grade", "family", "enjoy", "going", "music", "would", "student", "work"}
+stop_words = set(stopwords.words("english")) | {
+    "hi", "interest", "pursue", "passion", "hello", "there", "like", "mostly", "make", "good", "want",
+    "play", "playing", "grade", "family", "enjoy", "going", "music", "would", "student", "work"
+}
 
 app = Flask(__name__, template_folder="templates")
 CORS(app, resources={r"/chat": {"origins": "*"}})
+
+# Rate limiter setup
+limiter = Limiter(
+    get_remote_address,
+    app=app,
+    default_limits=["100 per hour"]
+)
 
 careers_df = pd.read_csv("SpreadsheetAUD.csv").fillna("")
 
@@ -66,6 +79,7 @@ def clean_description(description):
 def index():
     return render_template("index.html")
 
+@limiter.limit("5 per minute")  # <–– Add limit per IP to protect endpoint
 @app.route("/chat", methods=["POST"])
 def chat():
     user_input = request.json.get("message", "").strip()
