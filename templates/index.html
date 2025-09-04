@@ -237,13 +237,14 @@
       })
       .then(response => response.json())
 .then(data => {
+  //REMOVED KEYWORD SHOWING.
   // Show keywords if they exist
-  if (data.keywords && data.keywords.length > 0) {
-    chatBox.innerHTML += `<div class='bot-message'>Thanks for sharing! I noticed these keywords: ${data.keywords.join(", ")}.</div>`;
+  //if (data.keywords && data.keywords.length > 0) {
+  //  chatBox.innerHTML += `<div class='bot-message'>Thanks for sharing! I noticed these keywords: ${data.keywords.join(", ")}.</div>`;
   }
 
   // Always show the main message
-  chatBox.innerHTML += `<div class='bot-message'><strong>${data.message}</strong></div>`;
+  chatBox.innerHTML += `<div class='bot-message'>${data.message}</div>`;
 
   // Careers section
   document.getElementById("career-results").innerHTML = "";
@@ -290,3 +291,4 @@
   </script>
 </body>
 </html>
+
