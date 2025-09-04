@@ -112,7 +112,8 @@ def chat():
 
     if not matched_careers:
         return jsonify({
-            "message": "I'm not seeing any matches yet. Tell me more about you and the things you like to do!",
+            "keywords": keywords,
+            "message": "I'm not seeing any matches that fit the keywords you provided. Please describe your interests, skills, or the kind of work you enjoy!",
             "careers": []
         })
 
