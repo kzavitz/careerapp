@@ -23,8 +23,6 @@
       box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
     }
 
-
-
     .chat-box {
       height: 300px;
       overflow-y: auto;
@@ -44,7 +42,7 @@
 
     .user-message {
       align-self: flex-end;
-      background: rgba(255, 120, 90, 0.85); /* Darker coral-peach */
+      background: rgba(255, 120, 90, 0.85);
       color: white;
       text-align: right;
       margin-left: auto;
@@ -52,7 +50,7 @@
 
     .bot-message {
       align-self: flex-start;
-      background: rgba(255, 255, 255, 0.8); /* 80% opaque white */
+      background: rgba(255, 255, 255, 0.8);
       color: #333;
       text-align: left;
       margin-right: auto;
@@ -117,7 +115,7 @@
     .career-box a {
       text-decoration: none;
       font-weight: bold;
-      color: #d56757; /* Warm coral for links */
+      color: #d56757;
     }
 
     .career-box a:hover {
@@ -137,11 +135,67 @@
       text-align: center;
       margin-bottom: 30px;
     }
+
+    /* --- Welcome overlay styles --- */
+   .welcome-frame {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  display: flex;
+  align-items: flex-start;   /* top-aligned instead of center */
+  justify-content: center;
+  backdrop-filter: blur(10px) brightness(0.9);
+  background: rgba(255, 255, 255, 0.2);
+  z-index: 9999;
+  opacity: 0;
+  animation: fadeIn 0.8s forwards;
+  cursor: pointer;
+  padding-top: 10vh; /* push card down a bit from very top */
+}
+
+.welcome-content {
+  background: rgba(255, 255, 255, 0.3);
+  padding: 2rem;
+  border-radius: 20px;
+  text-align: center;
+  width: 90%;          /* responsive width */
+  max-width: 700px;    /* wider to match chat box */
+  box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+  backdrop-filter: blur(12px);
+  animation: scaleIn 0.6s ease;
+}
+
+    @keyframes fadeIn {
+      to { opacity: 1; }
+    }
+    .fade-out {
+      animation: fadeOut 0.5s forwards;
+    }
+    @keyframes fadeOut {
+      to { opacity: 0; visibility: hidden; }
+    }
+
+    @keyframes scaleIn {
+      from { transform: scale(0.9); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
   </style>
 </head>
 <body>
+  <!-- Welcome overlay -->
+  <div id="welcome-frame" class="welcome-frame">
+    <div class="welcome-content">
+      <h1>Welcome To The <br>Music Career Chatbot</h1>
+      <p>Here’s how to use the bot:<br>
+         • Please provide as much detail as you can about your interests and passions.<br>
+         • Ex: "I am interested in a career which includes ... " <br>
+         • Explore careers as you go!</p>
+      <p><em>Click anywhere to continue...</em></p>
+    </div>
+  </div>
+
   <div class="chat-container d-flex flex-column">
-      <h2>Welcome   To   The <br> Music Career Chatbot</h2>
+    <h2>Welcome   To   The <br> Music Career Chatbot</h2>
     <div class="chat-box d-flex flex-column" id="chat-box">
       <div class="bot-message">Welcome! Tell me about your interests, skills, and ideal career path.</div>
     </div>
@@ -156,7 +210,18 @@
     <div id="career-results" class="mt-4"></div>
   </div>
 
- <script>
+  <script>
+    // Welcome frame logic
+    document.addEventListener("DOMContentLoaded", () => {
+      const welcomeFrame = document.getElementById("welcome-frame");
+      welcomeFrame.addEventListener("click", () => {
+        welcomeFrame.classList.add("fade-out");
+        setTimeout(() => {
+          welcomeFrame.style.display = "none";
+        }, 500);
+      });
+    });
+
     function sendMessage() {
       const inputEl = document.getElementById("user-input");
       const userInput = inputEl.value.trim();
@@ -171,28 +236,36 @@
         body: JSON.stringify({ message: userInput })
       })
       .then(response => response.json())
-      .then(data => {
-        chatBox.innerHTML += `<div class='bot-message'>Thanks for sharing! I noticed these keywords: ${data.keywords.join(", ")}.</div>`;
-        chatBox.innerHTML += `<div class='bot-message'><strong>${data.message}</strong></div>`;
+.then(data => {
+  // Show keywords if they exist
+  if (data.keywords && data.keywords.length > 0) {
+    chatBox.innerHTML += `<div class='bot-message'>Thanks for sharing! I noticed these keywords: ${data.keywords.join(", ")}.</div>`;
+  }
 
-        document.getElementById("career-results").innerHTML = "";
-        data.careers.forEach((career, index) => {
-          const id = `related-${index}`;
-          document.getElementById("career-results").innerHTML += `
-            <div class='career-box'>
-              <h4><a href='${career["Link"]}' target='_blank'>${career["Job Title"]}</a></h4>
-              <p>${career["Description"]}</p>
-              <p><strong>Category:</strong> ${career["Category"]}</p>
-              <p><strong>NOC:</strong> <a href='${career["NOC Link"]}' target='_blank'>${career["NOC"]}</a></p>
-              <p><strong>Matched because of:</strong> ${career["Matched Keywords"].join(", ")}</p>
-              <p><a href="#" onclick="showRelated('${id}', ${JSON.stringify(career["Related Careers"]).replace(/"/g, '&quot;')}); return false;">Take a look at more careers in this category</a></p>
-              <div id="${id}" class="related-box" style="display:none;"></div>
-            </div>
-          `;
-        });
+  // Always show the main message
+  chatBox.innerHTML += `<div class='bot-message'><strong>${data.message}</strong></div>`;
 
-        chatBox.scrollTop = chatBox.scrollHeight;
-      });
+  // Careers section
+  document.getElementById("career-results").innerHTML = "";
+  if (data.careers && data.careers.length > 0) {
+    data.careers.forEach((career, index) => {
+      const id = `related-${index}`;
+      document.getElementById("career-results").innerHTML += `
+        <div class='career-box'>
+          <h4><a href='${career["Link"]}' target='_blank'>${career["Job Title"]}</a></h4>
+          <p>${career["Description"]}</p>
+          <p><strong>Category:</strong> ${career["Category"]}</p>
+          <p><strong>NOC:</strong> <a href='${career["NOC Link"]}' target='_blank'>${career["NOC"]}</a></p>
+          <p><strong>Matched because of:</strong> ${career["Matched Keywords"].join(", ")}</p>
+          <p><a href="#" onclick="showRelated('${id}', ${JSON.stringify(career["Related Careers"]).replace(/"/g, '&quot;')}); return false;">Take a look at more careers in this category</a></p>
+          <div id="${id}" class="related-box" style="display:none;"></div>
+        </div>
+      `;
+    });
+  }
+
+  chatBox.scrollTop = chatBox.scrollHeight;
+});
 
       inputEl.value = "";
     }
@@ -217,4 +290,3 @@
   </script>
 </body>
 </html>
-
