@@ -345,10 +345,19 @@ def chat():
         matched_keywords = list(set(keywords) & csv_keywords)
         matched_avenues = list(set(avenues) & career_avenues)
         if matched_keywords or matched_avenues:
+            noc_code = str(row.get("NOC", "")).strip()
+
+            noc_url = ""
+            if noc_code and noc_code.lower() != "nan":
+                noc_url = f"https://noc.esdc.gc.ca/Structure/NOCProfile?code={noc_code}&version=2021.0"
+
+
             matched_careers.append({
                 "Job Title": row["Job Title"],
                 "Description": clean_description(row["Description of the Job"]),
                 "Link": row["Links"],
+                "NOC": noc_code,
+                "NOC_URL": noc_url,
                 "Matched Keywords": matched_keywords,
                 "Matched Avenues": matched_avenues,
                 "score": len(matched_keywords) * 2 + len(matched_avenues)
