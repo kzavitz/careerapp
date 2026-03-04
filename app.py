@@ -90,7 +90,7 @@ INTEREST_TRANSLATION = {
     },
     "games": {
         "pathways": ["technology", "instruments_sound", "data_analysis"],
-        "prompt": "What do you like most about video games?",
+        "prompt": "What do you like most about games?",
         "options": [
             "Music and sound",
             "Technology and programming",
@@ -386,3 +386,4 @@ def chat():
 
 if __name__ == "__main__":
     app.run(debug=True)
+
