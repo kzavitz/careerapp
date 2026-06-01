@@ -297,86 +297,237 @@
 </div>
 
 <script>
-  let activeInterest = null;
 
-  function closeIntro() {
-    const overlay = document.getElementById("intro-overlay");
-    overlay.style.opacity = "0";
-    setTimeout(() => overlay.style.display = "none", 400);
-  }
+let activeInterest = null;
 
-  function sendMessage() {
-    const inputEl = document.getElementById("user-input");
-    const userInput = inputEl.value.trim();
-    if (!userInput) return;
+function closeIntro() {
 
-    const chatBox = document.getElementById("chat-box");
-    chatBox.innerHTML += `<div class="user-message">${userInput}</div>`;
+  const overlay =
+    document.getElementById(
+      "intro-overlay"
+    );
 
-    fetch("/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        message: userInput,
-        active_interest: activeInterest
-      })
+  overlay.style.opacity = "0";
+
+  setTimeout(() => {
+
+    overlay.style.display = "none";
+
+  }, 400);
+}
+
+function sendMessage() {
+
+  const inputEl =
+    document.getElementById(
+      "user-input"
+    );
+
+  const userInput =
+    inputEl.value.trim();
+
+  if (!userInput) return;
+
+  const chatBox =
+    document.getElementById(
+      "chat-box"
+    );
+
+  chatBox.innerHTML += `
+
+    <div class="user-message">
+
+      ${userInput}
+
+    </div>
+  `;
+
+  fetch("/chat", {
+
+    method: "POST",
+
+    headers: {
+
+      "Content-Type":
+      "application/json"
+    },
+
+    body: JSON.stringify({
+
+      message:
+      userInput,
+
+      active_interest:
+      activeInterest
     })
-    .then(response => response.json())
-    .then(data => {
-      chatBox.innerHTML += `<div class="bot-message">${data.message}</div>`;
-      activeInterest = data.active_interest;
 
-      const careerResults = document.getElementById("career-results");
+  })
+
+  .then(response => response.json())
+
+  .then(data => {
+
+    chatBox.innerHTML += `
+
+      <div class="bot-message">
+
+        ${data.message}
+
+      </div>
+    `;
+
+    activeInterest =
+      data.active_interest;
+
+    const careerResults =
+      document.getElementById(
+        "career-results"
+      );
+
+    // only clear results
+    // if new cards exist
+
+    if (
+
+      !activeInterest
+
+      &&
+
+      data.careers
+
+      &&
+
+      data.careers.length > 0
+
+    ) {
+
       careerResults.innerHTML = "";
 
-      if (!activeInterest && data.careers && data.careers.length > 0) {
+      document
 
-        document.getElementById("split-layout").classList.add("has-results");
+      .getElementById(
+        "split-layout"
+      )
 
-        data.careers.forEach(career => {
+      .classList.add(
+        "has-results"
+      );
+
+      data.careers.forEach(
+
+        career => {
 
           const matchedReasons = [
-            ...(career["Matched Keywords"] || []),
-            ...(career["Matched Avenues"] || [])
-          ].join(", ") || "No specific keywords matched";
 
-          const nocLine = career.NOC
-            ? `<p>
-                 <strong>NOC:</strong>
-                 <a href="${career.NOC_URL}" target="_blank">${career.NOC}</a>
-                 <a href="https://noc.esdc.gc.ca/Home/AboutNOC"
-                    target="_blank"
-                    style="font-size:0.9em; margin-left:6px;">
-                   (What is this?)
-                 </a>
-               </p>`
-            : "";
+            ...(career["Matched Keywords"] || []),
+
+            ...(career["Matched Avenues"] || [])
+
+          ]
+
+          .join(", ")
+
+          ||
+
+          "General overlap";
+
+          const nocLine =
+
+            career.NOC
+
+            ?
+
+            `
+
+            <p>
+
+              <strong>NOC:</strong>
+
+              <a
+
+                href="${career.NOC_URL}"
+
+                target="_blank">
+
+                ${career.NOC}
+
+              </a>
+
+            </p>
+
+            `
+
+            :
+
+            "";
 
           careerResults.innerHTML += `
+
             <div class="career-box">
-              <h4><a href="${career.Link}" target="_blank">${career["Job Title"]}</a></h4>
-              <p>${career.Description}</p>
+
+              <h4>
+
+                <a
+
+                 href="${career.Link}"
+
+                 target="_blank">
+
+                 ${career["Job Title"]}
+
+                </a>
+
+              </h4>
+
+              <p>
+
+                ${career.Description}
+
+              </p>
+
               ${nocLine}
-              <p><strong>Matched because of:</strong> ${matchedReasons}</p>
+
+              <p>
+
+                <strong>
+
+                  Matched because of:
+
+                </strong>
+
+                ${matchedReasons}
+
+              </p>
+
             </div>
           `;
-        });
-      } else {
-        careerResults.innerHTML = `<p class="text-muted">No results yet…</p>`;
-      }
+        }
+      );
 
-      chatBox.scrollTop = chatBox.scrollHeight;
-    });
-
-    inputEl.value = "";
-  }
-
-  function handleEnter(event) {
-    if (event.key === "Enter") {
-      event.preventDefault();
-      sendMessage();
     }
+
+    chatBox.scrollTop =
+      chatBox.scrollHeight;
+
+  });
+
+  inputEl.value = "";
+}
+
+function handleEnter(event) {
+
+  if (
+
+    event.key === "Enter"
+
+  ) {
+
+    event.preventDefault();
+
+    sendMessage();
   }
+}
+
 </script>
 
 </body>
