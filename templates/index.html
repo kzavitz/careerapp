@@ -367,14 +367,45 @@ function sendMessage() {
 
   .then(data => {
 
-    chatBox.innerHTML += `
+let botHTML = data.message;
 
-      <div class="bot-message">
+if (data.all_matches && data.all_matches.length > 0) {
 
-        ${data.message}
+    botHTML += `
 
-      </div>
+    <br><br>
+
+    <button
+        class="btn btn-sm btn-outline-primary"
+        onclick="toggleMatches(this)"
+    >
+
+        See all matched careers
+
+    </button>
+
+    <div
+        class="all-careers-list"
+        style="
+            display:none;
+            margin-top:10px;
+        "
+    >
+
+        ${data.all_matches.join("<br>")}
+
+    </div>
     `;
+}
+
+chatBox.innerHTML += `
+
+<div class="bot-message">
+
+${botHTML}
+
+</div>
+`;
 
     activeInterest =
       data.active_interest;
@@ -513,22 +544,36 @@ function sendMessage() {
 
   inputEl.value = "";
 }
-
 function handleEnter(event) {
-
   if (
-
     event.key === "Enter"
-
   ) {
-
     event.preventDefault();
-
     sendMessage();
   }
 }
+function toggleMatches(button) {
+
+    const list = button.nextElementSibling;
+
+    if (list.style.display === "none") {
+
+        list.style.display = "block";
+
+        button.innerText =
+            "Hide matched careers";
+
+    }
+
+    else {
+
+        list.style.display = "none";
+
+        button.innerText =
+            "See all matched careers";
+    }
+}
 
 </script>
-
 </body>
 </html>
