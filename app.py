@@ -47,25 +47,197 @@ CAREER_AVENUES = {
     "instruments_sound",
     "teaching",
     "technology",
-    "sports"
+    "sports",
+    "health"
 }
 
+
 FOLLOWUP_OPTION_TO_AVENUE = {
-    "bringing people together": ["people"],
-    "working with a team": ["sports"],
-    "culture and tradition": ["culture"],
-    "organizing or running events": ["people", "outdoors"],
-    "working with your hands and fixing things": ["hands_on"],
-    "technology and programming": ["technology"],
-    "music and sound": ["instruments_sound"],
-    "teaching or sharing historical knowledge": ["teaching"],
+
+    # SPORTS
+
+    "physical performance": [
+        "sports",
+        "outdoors"
+    ],
+
+    "health and fitness": [
+        "health",
+
+    ],
+
+    "team environments": [
+        "sports",
+        "people"
+    ],
+
+    "competition and strategy": [
+        "sports",
+        "data_analysis"
+    ],
+
+    "working with a team": [
+        "sports",
+        "people"
+    ],
+
+    # TECHNOLOGY
+
+    "programming and problem-solving": [
+        "technology",
+        "data_analysis"
+    ],
+
+    "building or designing devices": [
+        "technology",
+        "hands_on"
+    ],
+
+    "exploring new innovations": [
+        "technology"
+    ],
+
+    "understanding systems and data": [
+        "technology",
+        "data_analysis"
+    ],
+
+    # HISTORY
+
+    "studying past events": [
+        "culture",
+        "teaching"
+    ],
+
+    "understanding cultures": [
+        "culture",
+        "people"
+    ],
+
+    "analyzing patterns": [
+        "data_analysis"
+    ],
+
+    "teaching others": [
+        "teaching",
+        "people"
+    ],
+
+    # FOOD
+
+    "cooking and creating": [
+        "hands_on"
+    ],
+
+    "culture and tradition": [
+        "culture"
+    ],
+
+    "bringing people together": [
+        "people"
+    ],
+
+    "organizing or running events": [
+        "people",
+        "outdoors"
+    ],
+
+    # GAMES
+
+    "music and sound": [
+        "instruments_sound"
+    ],
+
+    "competition": [
+        "sports"
+    ],
+
+    "design and worlds": [
+        "technology",
+        "culture"
+    ]
 }
 
 INTEREST_TRANSLATION = {
 
-    # KEEP YOUR EXISTING INTERESTS HERE
-    # (unchanged)
+    "sports": {
+        "pathways": [
+            "sports",
+            "hands_on",
+            "people",
+            "culture",
+            "outdoors"
+        ],
+        "prompt": "What do you enjoy most about sports?",
+        "options": [
+            "Physical performance",
+            "Health and fitness",
+            "Team environments",
+            "Competition and strategy"
+        ]
+    },
 
+    "technology": {
+        "pathways": [
+            "technology",
+            "data_analysis",
+            "hands_on"
+        ],
+        "prompt": "What do you enjoy most about technology?",
+        "options": [
+            "Programming and problem-solving",
+            "Building or designing devices",
+            "Exploring new innovations",
+            "Understanding systems and data"
+        ]
+    },
+
+    "food": {
+        "pathways": [
+            "people",
+            "culture",
+            "hands_on",
+            "teaching"
+        ],
+        "prompt": "What do you enjoy most about food?",
+        "options": [
+            "Cooking and creating",
+            "Culture and tradition",
+            "Bringing people together",
+            "Organizing or running events"
+        ]
+    },
+
+    "games": {
+        "pathways": [
+            "technology",
+            "instruments_sound",
+            "data_analysis"
+        ],
+        "prompt": "What part of games interests you most?",
+        "options": [
+            "Programming and problem-solving",
+            "Music and sound",
+            "Competition",
+            "Design and worlds"
+        ]
+    },
+
+    "history": {
+        "pathways": [
+            "teaching",
+            "people",
+            "culture",
+            "data_analysis"
+        ],
+        "prompt": "What part of history interests you most?",
+        "options": [
+            "Studying past events",
+            "Understanding cultures",
+            "Analyzing patterns",
+            "Teaching others"
+        ]
+    }
 }
 
 # ---------------- Helpers ----------------
@@ -109,6 +281,7 @@ def detect_surface_interests(text):
         if w in INTEREST_TRANSLATION
     ]
 
+
 TEXT_TO_AVENUE = {
 
     "hands": "hands_on",
@@ -150,6 +323,26 @@ TEXT_TO_AVENUE = {
     "baseball": "sports",
     "football": "sports",
 
+    "patterns": "data_analysis",
+    "strategy": "data_analysis",
+    "fitness": "sports",
+    "innovation": "technology",
+    "devices": "hands_on",
+    "cultures": "culture",
+    "events": "people",
+    "systems": "technology",
+
+    "acoustics": "instruments_sound",
+    "acoustic": "instruments_sound",
+
+    "cardiology": "health",
+    "neurology": "health",
+    "medicine": "health",
+    "doctor": "health",
+    "health": "health",
+    "therapy": "health",
+    "hospital": "health",
+
     # add weak sports recognition
 
     "blue jays": "sports",
@@ -157,7 +350,8 @@ TEXT_TO_AVENUE = {
     "raptors": "sports",
     "nhl": "sports",
     "nba": "sports",
-    "mlb": "sports"
+    "mlb": "sports",
+    "nfl": "sports"
 }
 
 def detect_followup_avenues(text):
@@ -506,6 +700,12 @@ def chat():
 
     matched_careers = []
 
+    match_lines = []
+
+    all_matched_keywords = set()
+
+    all_matched_avenues = set()
+
     for _, row in careers_df.iterrows():
 
         csv_keywords = {
@@ -529,6 +729,24 @@ def chat():
             ).split(",")
         }
 
+        # NEW: expand combined avenue labels
+
+        if "people_culture" in career_avenues:
+            career_avenues.add(
+                "people"
+            )
+
+            career_avenues.add(
+                "culture"
+            )
+
+        matched_keywords = list(
+
+            set(keywords)
+
+            & csv_keywords
+        )
+
         matched_keywords = list(
 
             set(keywords)
@@ -544,7 +762,13 @@ def chat():
         )
 
         if matched_keywords or matched_avenues:
+            all_matched_keywords.update(
+                matched_keywords
+            )
 
+            all_matched_avenues.update(
+                matched_avenues
+            )
             noc_code = str(
                 row.get(
                     "NOC",
@@ -658,11 +882,9 @@ def chat():
 
     else:
 
-        full_match_text = ""
+        match_lines = []
 
         if all_matches:
-
-            match_lines = []
 
             for i, career in enumerate(
 
@@ -683,28 +905,51 @@ def chat():
                     f"</a>"
                 )
 
-            full_match_text = (
+        input_terms = []
 
-                    "<br><br>"
+        input_terms.extend(
+            keywords
+        )
 
-                    "<strong>Full list of matched careers:</strong>"
+        input_terms.extend(
+            avenues
+        )
 
-                    "<br>"
+        input_terms = list(
+            set(input_terms)
+        )
 
-                    +
+        input_text = ", ".join(
 
-                    "<br>".join(match_lines)
-            )
+            [f'"{x}"' for x in input_terms]
+
+        ) if input_terms else "your interests"
+
+        matched_terms = list(
+
+            all_matched_keywords
+
+        ) + list(
+
+            all_matched_avenues
+        )
+
+        matched_text = ", ".join(
+
+            [f'{x}' for x in matched_terms]
+
+        ) if matched_terms else "general overlaps"
 
         message = (
 
-                "Here are some career matches "
+            "Thanks for your response! "
 
-                "based on your responses."
 
-                +
+            f"I found matches connected to: "
 
-                full_match_text
+            f"{matched_text}.<br><br>"
+
+            f"Here are some careers that may fit:"
         )
 
     timestamp = datetime.utcnow().isoformat()
@@ -735,13 +980,16 @@ def chat():
     return jsonify({
 
         "message":
-        message,
+            message,
 
         "careers":
-        matched_careers,
+            matched_careers,
+
+        "all_matches":
+            match_lines,
 
         "active_interest":
-        None
+            None
     })
 
 if __name__ == "__main__":
